@@ -10,14 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@rollup/plugin-inject": "^5.0.5",
+    "@ston-fi/api": "^0.8.0",
     "@ston-fi/sdk": "^0.5.3",
     "@tonconnect/ui-react": "^2.0.2",
     "buffer": "^6.0.3",
+    "process": "^0.11.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tonweb": "^0.0.66"
+    "rollup-plugin-polyfill-node": "^0.13.0",
+    "tonweb": "^0.0.66",
+    "vite-tsconfig-paths": "^4.3.2"
   },
   "devDependencies": {
+    "@types/node": "^20.12.12",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
