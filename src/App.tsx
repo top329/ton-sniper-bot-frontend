@@ -4,6 +4,7 @@ import TonWeb from 'tonweb';
 import { DEX, pTON } from '@ston-fi/sdk';
 import { StonApiClient } from '@ston-fi/api';
 
+import useSocket from './hooks/useSocket';
 import './App.css';
 
 const router = new DEX.v1.Router({
@@ -12,16 +13,22 @@ const router = new DEX.v1.Router({
 });
 
 function App() {
+  const { socket } = useSocket();
+
   const [tonConnectUI] = useTonConnectUI();
 
   const [transaction, setTransaction] = useState<any>({});
+
+  socket.on('new-pool', (message: any) => {
+    console.log(message);
+  });
 
   useEffect(() => {
     async function init() {
       const txParams = await router.buildSwapTonToJettonTxParams({
         userWalletAddress: 'UQDJNqhcUuLKTHYbX5kmeE1X4IixRPBZjl6nlqlDhOZ3s4Yi',
         proxyTonAddress: pTON.v1.address,
-        offerAmount: new TonWeb.utils.BN('100000000'),
+        offerAmount: new TonWeb.utils.BN('100000000'), // 0.1 TON
         askJettonAddress: 'EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO', // STON
         minAskAmount: new TonWeb.utils.BN('1'),
         queryId: 12345,
