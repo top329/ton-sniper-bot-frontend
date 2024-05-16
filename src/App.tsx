@@ -1,48 +1,72 @@
-import { useEffect, useState } from 'react';
-import {
-  TonConnectButton,
-  TonConnectUIProvider,
-  useTonConnectUI,
-} from '@tonconnect/ui-react';
+import React, { useEffect, useState } from 'react';
+import { TonConnectButton, useTonConnectUI } from '@tonconnect/ui-react';
 import TonWeb from 'tonweb';
 import { DEX, pTON } from '@ston-fi/sdk';
+import { StonApiClient } from '@ston-fi/api';
 
-import * as buffer from 'buffer';
-window.Buffer = buffer.Buffer;
-
+import useSocket from './hooks/useSocket';
 import './App.css';
 
+const router = new DEX.v1.Router({
+  tonApiClient: new TonWeb.HttpProvider(), // contracts on chain calls will use TON API
+  stonApiClient: new StonApiClient(), // data fetching required for tx creation will use STON API
+});
+
 function App() {
-  const router = new DEX.v1.Router({
-    tonApiClient: new TonWeb.HttpProvider(),
+  const { socket } = useSocket();
+
+  const [tonConnectUI] = useTonConnectUI();
+
+  const [transaction, setTransaction] = useState<any>({});
+
+  socket.on('new-pool', (message: any) => {
+    console.log(message);
   });
-  // const [transaction, setTransaction] = useState({});
 
-  // const [tonConnectUI, setOptions] = useTonConnectUI();
-
-  // useEffect(() => {
-  //   async function init() {
-  //     const txParams = await router.buildSwapTonToJettonTxParams({
-  //       userWalletAddress: '', // ! replace with your address
-  //       proxyTonAddress: pTON.v1.address,
-  //       offerAmount: new TonWeb.utils.BN('1000000000'),
-  //       askJettonAddress: 'EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO', // STON
-  //       minAskAmount: new TonWeb.utils.BN('1'),
-  //       queryId: 12345,
-  //     });
-  //     console.log(txParams);
-  //   }
-  //   init();
-  // },[])
+  useEffect(() => {
+    async function init() {
+      const txParams = await router.buildSwapTonToJettonTxParams({
+        userWalletAddress: 'UQDJNqhcUuLKTHYbX5kmeE1X4IixRPBZjl6nlqlDhOZ3s4Yi',
+        proxyTonAddress: pTON.v1.address,
+        offerAmount: new TonWeb.utils.BN('100000000'), // 0.1 TON
+        askJettonAddress: 'EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO', // STON
+        minAskAmount: new TonWeb.utils.BN('1'),
+        queryId: 12345,
+      });
+      const tx = {
+        validUntil: Date.now() + 1000000,
+        messages: [
+          {
+            address: txParams.to.toString(true, true, true),
+            amount: txParams.gasAmount.toString(),
+            payload: TonWeb.utils.bytesToBase64(await txParams.payload.toBoc()),
+          },
+        ],
+      };
+      setTransaction(tx);
+    }
+    init();
+  }, []);
 
   return (
-    <TonConnectUIProvider manifestUrl="http://localhost:5173/tonconnect-manifest.json">
+    <React.Fragment>
       <span>My App with React UI</span>
       <TonConnectButton />
-      {/* <button onClick={() => tonConnectUI.sendTransaction(transaction)}>
+      <button
+        onClick={() => {
+          if (!tonConnectUI) {
+            return;
+          }
+          if (!transaction || Object.keys(transaction).length === 0) {
+            return;
+          } else {
+            tonConnectUI.sendTransaction(transaction);
+          }
+        }}
+      >
         Send transaction
-      </button> */}
-    </TonConnectUIProvider>
+      </button>
+    </React.Fragment>
   );
 }
 
